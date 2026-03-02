@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Support Chat API – Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    button { padding: 0.5rem 1rem; margin-right: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; }
+    pre { background: #f0f0f0; padding: 1rem; overflow: auto; font-size: 0.9rem; }
+    .error { color: #c00; }
+    input { width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; box-sizing: border-box; }
+    label { display: block; margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>Support Chat API – Test</h1>
+  <p>Base URL: <strong id="baseUrl">http://localhost:5000</strong></p>
+
+  <div>
+    <button type="button" id="btnCreate">1. Create session</button>
+    <button type="button" id="btnPoll">2. Poll session</button>
+    <button type="button" id="btnGet">3. Get session</button>
+  </div>
+
+  <label>Session ID (from Create):</label>
+  <input type="text" id="sessionId" placeholder="e.g. from Create session response">
+
+  <pre id="output">(Click a button and see response here)</pre>
+
+  <script>
+    const baseUrl = window.location.origin;
+    document.getElementById('baseUrl').textContent = baseUrl;
+
+    const sessionIdEl = document.getElementById('sessionId');
+    const outputEl = document.getElementById('output');
+
+    function log(msg, isError) {
+      outputEl.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
+      outputEl.classList.toggle('error', !!isError);
+    }
+
+    document.getElementById('btnCreate').onclick = async () => {
+      try {
+        const res = await fetch(baseUrl + '/api/chat/session', { method: 'POST' });
+        const data = await res.json();
+        log(data);
+        if (data.sessionId) sessionIdEl.value = data.sessionId;
+      } catch (e) {
+        log('Error: ' + e.message, true);
+      }
+    };
+
+    document.getElementById('btnPoll').onclick = async () => {
+      const id = sessionIdEl.value.trim();
+      if (!id) { log('Enter a session ID first (from Create session).', true); return; }
+      try {
+        const res = await fetch(baseUrl + '/api/chat/session/' + id + '/poll', { method: 'POST' });
+        const data = await res.json();
+        log(data);
+      } catch (e) {
+        log('Error: ' + e.message, true);
+      }
+    };
+
+    document.getElementById('btnGet').onclick = async () => {
+      const id = sessionIdEl.value.trim();
+      if (!id) { log('Enter a session ID first.', true); return; }
+      try {
+        const res = await fetch(baseUrl + '/api/chat/session/' + id);
+        const data = await res.json();
+        log(data);
+      } catch (e) {
+        log('Error: ' + e.message, true);
+      }
+    };
+  </script>
+</body>
+</html>
